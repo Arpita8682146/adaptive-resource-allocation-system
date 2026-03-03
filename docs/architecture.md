@@ -1,20 +1,35 @@
 SYSTEM ARCHITECTURE
 
-1. Process Module:
-   Represents processes with attributes like process ID,
-   CPU requirement, memory requirement, and priority.
+1. Process Module
+   Represents a process with attributes:
+   - Process ID
+   - Burst Time
+   - Memory Requirement
+   - Priority
 
-2. Resource Manager:
-   Handles static resource allocation and tracks available CPU and memory.
+2. Resource Manager
+   - Handles static CPU and memory allocation
+   - Tracks available system resources
+   - Calculates utilization percentages
 
-3. Adaptive Logic:
-   Detects overload conditions using threshold values and
-   dynamically reallocates resources to prevent bottlenecks.
+3. Adaptive Logic
+   - Monitors CPU and memory thresholds
+   - Redistributes CPU based on priority
+   - Suspends lowest priority process during memory overload
+   - Implements priority aging to prevent starvation
 
-4. Main Controller:
-   Integrates all modules and runs the simulation.
+4. Main Controller
+   - Integrates all modules
+   - Executes simulation phases
+   - Logs system performance
 
 FLOW:
 
-User Input → Process Creation → Static Allocation → 
-Monitor CPU/Memory → Check Threshold → Adaptive Reallocation → Output Results
+Process Creation →
+Static Allocation →
+Monitor Utilization →
+Threshold Check →
+Adaptive Reallocation →
+Priority Aging →
+Performance Comparison →
+Logging

@@ -1,27 +1,31 @@
 # Adaptive Resource Allocation in Multiprogramming Systems
 
-## Project Overview
+## Project Description
+This project simulates dynamic CPU and memory allocation in a multiprogramming environment. 
 
-This project simulates dynamic resource allocation in a multiprogramming system.
-The system monitors CPU and memory utilization and reallocates resources
-dynamically when overload conditions are detected.
+The system initially performs static allocation and then applies adaptive resource reallocation when system utilization exceeds predefined thresholds.
 
-## Objectives
+## Features
+- Static CPU and memory allocation
+- Real-time utilization monitoring
+- Threshold-based adaptive reallocation
+- Priority-based CPU redistribution
+- Memory suspension for overload handling
+- Starvation prevention using priority aging
+- Performance comparison (Static vs Adaptive)
+- Execution logging system
 
-- Simulate multiple processes running concurrently
-- Allocate CPU and memory resources
-- Monitor system load
-- Apply adaptive reallocation when thresholds are exceeded
-- Improve system efficiency and prevent bottlenecks
-
-## Modules
-
+## System Modules
 1. Process Module
 2. Resource Manager Module
 3. Adaptive Logic Module
 4. Main Controller
 
 ## Technology Used
-
 - Python
-- GitHub for version control
+- Git for version control
+
+## How to Run
+Navigate to project root folder and execute:
+
+python src/main.py
