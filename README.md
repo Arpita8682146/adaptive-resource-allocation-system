@@ -78,6 +78,23 @@ adaptive-resource-allocation-system/
 │   └── dashboard.py
 └── docs/
     └── architecture.md
+    📊 Sample Output
+
+The system displays:
+
+Process allocation details
+CPU and memory utilization
+Adaptive redistribution results
+Performance comparison
+Execution logs
+📈 Performance Comparison
+
+The project compares:
+
+Static allocation vs Adaptive allocation
+CPU utilization improvement
+Memory optimization
+    
 
 
 
