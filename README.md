@@ -66,8 +66,12 @@ Represents processes with:
 
 ### Run Backend:
 ```bash
+ HEAD
 python src/main.py
 adaptive-resource-allocation-system/
+
+python src/main.pyadaptive-resource-allocation-system/
+d5f723bb76bb0e1c581f79e57c36789a5a7884ea
 │
 ├── README.md
 ├── src/
@@ -77,10 +81,15 @@ adaptive-resource-allocation-system/
 │   ├── main.py
 │   └── dashboard.py
 └── docs/
+ HEAD
     └── architecture.md
     📊 Sample Output
 
 The system displays:
+
+    └── architecture.mdThe system displays:
+
+ d5f723bb76bb0e1c581f79e57c36789a5a7884ea
 
 Process allocation details
 CPU and memory utilization
@@ -89,29 +98,15 @@ Performance comparison
 Execution logs
 📈 Performance Comparison
 
+ HEAD
+
+
 The project compares:
 
+
+d5f723bb76bb0e1c581f79e57c36789a5a7884ea
 Static allocation vs Adaptive allocation
 CPU utilization improvement
 Memory optimization
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ d5f723bb76bb0e1c581f79e57c36789a5a7884ea
