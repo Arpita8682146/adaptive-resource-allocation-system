@@ -1,112 +1,215 @@
-# Adaptive Resource Allocation in Multiprogramming Systems (Operating Systems Project)
+# 🚀 Adaptive Resource Allocation in Multiprogramming Systems
 
-## 📌 Project Description
-This project simulates dynamic CPU and memory allocation in a multiprogramming environment.  
+## 📌 Overview
 
-The system initially performs **static allocation** and then applies **adaptive resource reallocation** when system utilization exceeds predefined thresholds.
+This project implements an **Adaptive Resource Allocation System** that dynamically monitors and manages system resources (CPU & Memory) across multiple processes.
 
----
+It includes both:
 
-## 🎯 Objectives
-- Maximize CPU utilization
-- Prevent memory overload
-- Reduce system bottlenecks
-- Ensure fairness using priority aging
-- Compare static and adaptive allocation performance
+* 💻 Desktop-based implementation
+* 🌐 Web-based dashboard (Streamlit)
+
+The system adapts resource allocation in real-time to optimize performance.
 
 ---
 
-## 🚀 Key Features
-- Static CPU and memory allocation
-- Real-time utilization monitoring
-- Threshold-based adaptive reallocation
-- Priority-based CPU redistribution
-- Memory suspension during overload
-- Starvation prevention using priority aging
-- Performance comparison (Static vs Adaptive)
-- Execution logging system
+## 🎯 Features
+
+### 🔍 Real-Time Monitoring
+
+* CPU usage tracking
+* Memory usage tracking
+* Live process list (PID, name, CPU%)
+
+### ⚙️ Adaptive Resource Allocation
+
+* Automatically adjusts process priority
+* Uses `nice()` for priority control
+* Dynamically optimizes CPU usage
+
+### 🤖 AI-Based Features
+
+* CPU prediction using Machine Learning
+* Anomaly detection for unusual spikes
+
+### 📊 Interactive Dashboard
+
+* Built using Streamlit
+* Real-time graphs (Plotly)
+* Smooth UI with alerts and metrics
+
+### 🔐 Multi-User Login System
+
+* File-based authentication (`users.json`)
+* Session handling
+* Logout functionality
+
+### 🔪 Process Management
+
+* Kill process using PID
+* Boost process priority
+
+### 📥 Reports
+
+* Download system data as CSV
 
 ---
 
-## 🧠 System Modules
+## 🛠️ Tech Stack
 
-### 1. Process Module
-Represents processes with:
-- Process ID
-- Burst Time
-- Memory Requirement
-- Priority
-
-### 2. Resource Manager
-- Handles CPU and memory allocation
-- Tracks available resources
-- Calculates utilization
-
-### 3. Adaptive Logic
-- Detects overload using thresholds
-- Redistributes CPU dynamically
-- Suspends low-priority processes
-- Implements priority aging
-
-### 4. Main Controller
-- Integrates all modules
-- Executes simulation
-- Logs system performance
+* **Python**
+* **Streamlit** – Web dashboard
+* **psutil** – System monitoring
+* **pandas / numpy** – Data handling
+* **plotly** – Graph visualization
+* **scikit-learn** – ML prediction
 
 ---
 
-## ⚙️ Technology Used
-- Python
-- Streamlit (for visualization)
-- Git & GitHub
+## 📁 Project Structure
 
----
-
-## ▶️ How to Run
-
-### Run Backend:
 ```bash
- HEAD
-python src/main.py
-adaptive-resource-allocation-system/
-
-python src/main.pyadaptive-resource-allocation-system/
-d5f723bb76bb0e1c581f79e57c36789a5a7884ea
+CSE-250-PROJECT/
 │
-├── README.md
-├── src/
-│   ├── process.py
-│   ├── resource_manager.py
-│   ├── adaptive_logic.py
+├── desktop_app/              # 💻 Desktop version
 │   ├── main.py
-│   └── dashboard.py
-└── docs/
- HEAD
-    └── architecture.md
-    📊 Sample Output
+│   ├── monitor.py
+│   ├── allocator.py
+│   ├── dashboard.py
+│
+├── web_app/                 # 🌐 Web dashboard
+│   ├── main.py
+│   ├── monitor.py
+│   ├── predictor.py
+│   ├── utils.py
+│   ├── stress.py
+│   ├── users.json
+│
+├── venv/                    # Virtual environment
+├── requirements.txt         # Dependencies
+├── README.md                # Documentation
+```
 
-The system displays:
+---
 
-    └── architecture.mdThe system displays:
+## ⚙️ Installation & Setup
 
- d5f723bb76bb0e1c581f79e57c36789a5a7884ea
+### 1️⃣ Open Project Folder
 
-Process allocation details
-CPU and memory utilization
-Adaptive redistribution results
-Performance comparison
-Execution logs
-📈 Performance Comparison
+```bash
+cd CSE-250-PROJECT
+```
 
- HEAD
+---
 
+### 2️⃣ Activate Virtual Environment
 
-The project compares:
+**Mac/Linux:**
 
+```bash
+source venv/bin/activate
+```
 
-d5f723bb76bb0e1c581f79e57c36789a5a7884ea
-Static allocation vs Adaptive allocation
-CPU utilization improvement
-Memory optimization
-    
- d5f723bb76bb0e1c581f79e57c36789a5a7884ea
+**Windows:**
+
+```bash
+venv\Scripts\activate
+```
+
+---
+
+### 3️⃣ Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 4️⃣ Run Web Dashboard
+
+```bash
+python -m streamlit run web_app/main.py
+```
+
+---
+
+## 🔐 Login Credentials
+
+From `users.json`:
+
+```text
+Username: admin
+Password: 1234
+```
+
+(Add more users in `users.json` if needed)
+
+---
+
+## 🧪 Demo (Testing)
+
+1. Run dashboard
+2. Run stress script:
+
+```bash
+python web_app/stress.py
+```
+
+3. Observe:
+
+* CPU spike 📈
+* Alerts ⚠️
+* Graph updates
+
+4. Find process PID
+5. Kill process → CPU drops 📉
+
+---
+
+## 📊 How It Works
+
+1. `monitor.py` → collects system data
+2. `utils.py` → adjusts process priority
+3. `predictor.py` → predicts CPU usage
+4. `main.py` → integrates everything
+5. Streamlit → displays dashboard
+
+---
+
+## 🧠 Key Concept
+
+> Adaptive Resource Allocation dynamically distributes CPU resources based on process demand in real time.
+
+---
+
+## ⚠️ Limitations
+
+* Cannot control OS kernel scheduling
+* Some system processes cannot be terminated
+* Requires admin privileges for certain operations
+
+---
+
+## 🚀 Future Enhancements
+
+* Multi-system monitoring
+* Email/notification alerts
+* Role-based authentication
+* Advanced ML models
+* Cloud deployment
+
+---
+
+## 🎯 Conclusion
+
+This project demonstrates how operating systems dynamically manage resources using adaptive techniques. It integrates monitoring, optimization, and prediction into a single system.
+
+---
+---
+
+## ⭐ Status
+
+✔️ Completed
+✔️ Fully functional
+✔️ Ready for submission
