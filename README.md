@@ -75,12 +75,17 @@ adaptive-resource-allocation-system/
 │
 ├── system_log.txt # Execution logs
 ├── README.md # Project documentation
+
+
 🖥️ Output
+
 Process details (CPU, memory, priority)
 Updated system status
 Real-time dashboard visualization
 Adaptive allocation results
+
 🔬 Technologies Used
+
 Python
 Streamlit (Frontend)
 OS Concepts (Scheduling, Allocation)
