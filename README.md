@@ -1,215 +1,93 @@
-# 🚀 Adaptive Resource Allocation in Multiprogramming Systems
+# 🚀 Adaptive Resource Allocation System (Operating Systems Project)
 
-## 📌 Overview
+## 📌 Project Overview
+This project simulates an **Adaptive Resource Allocation System** in a multiprogramming environment.  
+It dynamically manages CPU and memory allocation among processes to improve system efficiency and avoid resource starvation.
 
-This project implements an **Adaptive Resource Allocation System** that dynamically monitors and manages system resources (CPU & Memory) across multiple processes.
-
-It includes both:
-
-* 💻 Desktop-based implementation
-* 🌐 Web-based dashboard (Streamlit)
-
-The system adapts resource allocation in real-time to optimize performance.
+The system starts with **static allocation** and then applies **adaptive logic** based on system load and process priority.
 
 ---
 
-## 🎯 Features
-
-### 🔍 Real-Time Monitoring
-
-* CPU usage tracking
-* Memory usage tracking
-* Live process list (PID, name, CPU%)
-
-### ⚙️ Adaptive Resource Allocation
-
-* Automatically adjusts process priority
-* Uses `nice()` for priority control
-* Dynamically optimizes CPU usage
-
-### 🤖 AI-Based Features
-
-* CPU prediction using Machine Learning
-* Anomaly detection for unusual spikes
-
-### 📊 Interactive Dashboard
-
-* Built using Streamlit
-* Real-time graphs (Plotly)
-* Smooth UI with alerts and metrics
-
-### 🔐 Multi-User Login System
-
-* File-based authentication (`users.json`)
-* Session handling
-* Logout functionality
-
-### 🔪 Process Management
-
-* Kill process using PID
-* Boost process priority
-
-### 📥 Reports
-
-* Download system data as CSV
+## 🎯 Objectives
+- Maximize CPU utilization
+- Prevent memory overload
+- Ensure fair resource distribution
+- Avoid starvation using priority aging
+- Compare static vs adaptive allocation
+- Simulate real-world OS behavior
 
 ---
 
-## 🛠️ Tech Stack
+## ⚙️ Key Features
 
-* **Python**
-* **Streamlit** – Web dashboard
-* **psutil** – System monitoring
-* **pandas / numpy** – Data handling
-* **plotly** – Graph visualization
-* **scikit-learn** – ML prediction
+### 🔹 1. Static Resource Allocation
+- Initial CPU and memory assigned to processes
+- Based on predefined requirements
+
+### 🔹 2. Adaptive Resource Allocation
+- Dynamically reallocates resources
+- Adjusts based on system usage and thresholds
+
+### 🔹 3. Priority Aging
+- Prevents starvation of low-priority processes
+- Gradually increases priority over time
+
+### 🔹 4. Real-Time Monitoring
+- Tracks CPU and memory usage
+- Helps in decision-making
+
+### 🔹 5. Stress Testing Module
+- Simulates high system load
+- Tests system stability under pressure
+
+### 🔹 6. Prediction Module
+- Predicts future resource usage
+- Enhances proactive allocation
+
+### 🔹 7. Execution Logging
+- Logs system behavior
+- Useful for debugging and analysis
 
 ---
 
-## 📁 Project Structure
+## 🧠 System Architecture
+Process → Resource Manager → Adaptive Logic → Allocation Update
+↓
+Monitoring + Prediction + Stress Testing
+---
 
-```bash
-CSE-250-PROJECT/
+## 📂 Project Structure
+adaptive-resource-allocation-system/
 │
-├── desktop_app/              # 💻 Desktop version
-│   ├── main.py
-│   ├── monitor.py
-│   ├── allocator.py
-│   ├── dashboard.py
+├── src/
+│ ├── main.py # Main execution file
+│ ├── process.py # Process class
+│ ├── resource_manager.py # Resource allocation logic
+│ ├── adaptive_logic.py # Adaptive + priority aging
 │
-├── web_app/                 # 🌐 Web dashboard
-│   ├── main.py
-│   ├── monitor.py
-│   ├── predictor.py
-│   ├── utils.py
-│   ├── stress.py
-│   ├── users.json
+│ └── web_app/
+│ ├── main.py # Streamlit UI (Frontend)
+│ ├── monitor.py # System monitoring
+│ ├── predictor.py # Prediction logic
+│ ├── stress.py # Stress testing
+│ ├── utils.py # Helper functions
+│ └── users.json # User data
 │
-├── venv/                    # Virtual environment
-├── requirements.txt         # Dependencies
-├── README.md                # Documentation
-```
-
----
-
-## ⚙️ Installation & Setup
-
-### 1️⃣ Open Project Folder
-
-```bash
-cd CSE-250-PROJECT
-```
-
----
-
-### 2️⃣ Activate Virtual Environment
-
-**Mac/Linux:**
-
-```bash
-source venv/bin/activate
-```
-
-**Windows:**
-
-```bash
-venv\Scripts\activate
-```
-
----
-
-### 3️⃣ Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-### 4️⃣ Run Web Dashboard
-
-```bash
-python -m streamlit run web_app/main.py
-```
-
----
-
-## 🔐 Login Credentials
-
-From `users.json`:
-
-```text
-Username: admin
-Password: 1234
-```
-
-(Add more users in `users.json` if needed)
-
----
-
-## 🧪 Demo (Testing)
-
-1. Run dashboard
-2. Run stress script:
-
-```bash
-python web_app/stress.py
-```
-
-3. Observe:
-
-* CPU spike 📈
-* Alerts ⚠️
-* Graph updates
-
-4. Find process PID
-5. Kill process → CPU drops 📉
-
----
-
-## 📊 How It Works
-
-1. `monitor.py` → collects system data
-2. `utils.py` → adjusts process priority
-3. `predictor.py` → predicts CPU usage
-4. `main.py` → integrates everything
-5. Streamlit → displays dashboard
-
----
-
-## 🧠 Key Concept
-
-> Adaptive Resource Allocation dynamically distributes CPU resources based on process demand in real time.
-
----
-
-## ⚠️ Limitations
-
-* Cannot control OS kernel scheduling
-* Some system processes cannot be terminated
-* Requires admin privileges for certain operations
-
----
-
-## 🚀 Future Enhancements
-
-* Multi-system monitoring
-* Email/notification alerts
-* Role-based authentication
-* Advanced ML models
-* Cloud deployment
-
----
-
-## 🎯 Conclusion
-
-This project demonstrates how operating systems dynamically manage resources using adaptive techniques. It integrates monitoring, optimization, and prediction into a single system.
-
----
----
-
-## ⭐ Status
-
-✔️ Completed
-✔️ Fully functional
-✔️ Ready for submission
+├── system_log.txt # Execution logs
+├── README.md # Project documentation
+🖥️ Output
+Process details (CPU, memory, priority)
+Updated system status
+Real-time dashboard visualization
+Adaptive allocation results
+🔬 Technologies Used
+Python
+Streamlit (Frontend)
+OS Concepts (Scheduling, Allocation)
+Git & GitHub (Collaboration)
+💡 Key Concepts Used
+Multiprogramming
+CPU Scheduling
+Resource Allocation
+Priority Aging
+Dynamic Optimization
