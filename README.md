@@ -1,112 +1,98 @@
-# Adaptive Resource Allocation in Multiprogramming Systems (Operating Systems Project)
+# 🚀 Adaptive Resource Allocation System (Operating Systems Project)
 
-## 📌 Project Description
-This project simulates dynamic CPU and memory allocation in a multiprogramming environment.  
+## 📌 Project Overview
+This project simulates an **Adaptive Resource Allocation System** in a multiprogramming environment.  
+It dynamically manages CPU and memory allocation among processes to improve system efficiency and avoid resource starvation.
 
-The system initially performs **static allocation** and then applies **adaptive resource reallocation** when system utilization exceeds predefined thresholds.
+The system starts with **static allocation** and then applies **adaptive logic** based on system load and process priority.
 
 ---
 
 ## 🎯 Objectives
 - Maximize CPU utilization
 - Prevent memory overload
-- Reduce system bottlenecks
-- Ensure fairness using priority aging
-- Compare static and adaptive allocation performance
+- Ensure fair resource distribution
+- Avoid starvation using priority aging
+- Compare static vs adaptive allocation
+- Simulate real-world OS behavior
 
 ---
 
-## 🚀 Key Features
-- Static CPU and memory allocation
-- Real-time utilization monitoring
-- Threshold-based adaptive reallocation
-- Priority-based CPU redistribution
-- Memory suspension during overload
-- Starvation prevention using priority aging
-- Performance comparison (Static vs Adaptive)
-- Execution logging system
+## ⚙️ Key Features
+
+### 🔹 1. Static Resource Allocation
+- Initial CPU and memory assigned to processes
+- Based on predefined requirements
+
+### 🔹 2. Adaptive Resource Allocation
+- Dynamically reallocates resources
+- Adjusts based on system usage and thresholds
+
+### 🔹 3. Priority Aging
+- Prevents starvation of low-priority processes
+- Gradually increases priority over time
+
+### 🔹 4. Real-Time Monitoring
+- Tracks CPU and memory usage
+- Helps in decision-making
+
+### 🔹 5. Stress Testing Module
+- Simulates high system load
+- Tests system stability under pressure
+
+### 🔹 6. Prediction Module
+- Predicts future resource usage
+- Enhances proactive allocation
+
+### 🔹 7. Execution Logging
+- Logs system behavior
+- Useful for debugging and analysis
 
 ---
 
-## 🧠 System Modules
-
-### 1. Process Module
-Represents processes with:
-- Process ID
-- Burst Time
-- Memory Requirement
-- Priority
-
-### 2. Resource Manager
-- Handles CPU and memory allocation
-- Tracks available resources
-- Calculates utilization
-
-### 3. Adaptive Logic
-- Detects overload using thresholds
-- Redistributes CPU dynamically
-- Suspends low-priority processes
-- Implements priority aging
-
-### 4. Main Controller
-- Integrates all modules
-- Executes simulation
-- Logs system performance
-
+## 🧠 System Architecture
+Process → Resource Manager → Adaptive Logic → Allocation Update
+↓
+Monitoring + Prediction + Stress Testing
 ---
 
-## ⚙️ Technology Used
-- Python
-- Streamlit (for visualization)
-- Git & GitHub
-
----
-
-## ▶️ How to Run
-
-### Run Backend:
-```bash
- HEAD
-python src/main.py
+## 📂 Project Structure
 adaptive-resource-allocation-system/
-
-python src/main.pyadaptive-resource-allocation-system/
-d5f723bb76bb0e1c581f79e57c36789a5a7884ea
 │
-├── README.md
 ├── src/
-│   ├── process.py
-│   ├── resource_manager.py
-│   ├── adaptive_logic.py
-│   ├── main.py
-│   └── dashboard.py
-└── docs/
- HEAD
-    └── architecture.md
-    📊 Sample Output
-
-The system displays:
-
-    └── architecture.mdThe system displays:
-
- d5f723bb76bb0e1c581f79e57c36789a5a7884ea
-
-Process allocation details
-CPU and memory utilization
-Adaptive redistribution results
-Performance comparison
-Execution logs
-📈 Performance Comparison
-
- HEAD
+│ ├── main.py # Main execution file
+│ ├── process.py # Process class
+│ ├── resource_manager.py # Resource allocation logic
+│ ├── adaptive_logic.py # Adaptive + priority aging
+│
+│ └── web_app/
+│ ├── main.py # Streamlit UI (Frontend)
+│ ├── monitor.py # System monitoring
+│ ├── predictor.py # Prediction logic
+│ ├── stress.py # Stress testing
+│ ├── utils.py # Helper functions
+│ └── users.json # User data
+│
+├── system_log.txt # Execution logs
+├── README.md # Project documentation
 
 
-The project compares:
+🖥️ Output
 
+Process details (CPU, memory, priority)
+Updated system status
+Real-time dashboard visualization
+Adaptive allocation results
 
-d5f723bb76bb0e1c581f79e57c36789a5a7884ea
-Static allocation vs Adaptive allocation
-CPU utilization improvement
-Memory optimization
-    
- d5f723bb76bb0e1c581f79e57c36789a5a7884ea
+🔬 Technologies Used
+
+Python
+Streamlit (Frontend)
+OS Concepts (Scheduling, Allocation)
+Git & GitHub (Collaboration)
+💡 Key Concepts Used
+Multiprogramming
+CPU Scheduling
+Resource Allocation
+Priority Aging
+Dynamic Optimization
