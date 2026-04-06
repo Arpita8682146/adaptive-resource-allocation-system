@@ -1,0 +1,19 @@
+{
+  "name": "adaptive-resource-allocation-system-webui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node.js frontend scaffold for the Streamlit adaptive resource allocation UI",
+  "scripts": {
+    "install": "npm install",
+    "build": "echo \"No build step defined yet\"",
+    "start": "echo \"Node.js UI scaffold ready\""
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "streamlit-component-lib": "^1.15.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.1"
+  }
+}

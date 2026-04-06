@@ -28,6 +28,7 @@ class Dashboard:
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
         self.canvas.get_tk_widget().pack()
 
+        self.after_id = None
         self.update()
 
     def update(self):
@@ -54,4 +55,9 @@ class Dashboard:
 
         self.canvas.draw()
 
-        self.root.after(2000, self.update)
+        self.after_id = self.root.after(2000, self.update)
+
+    def stop_update(self):
+        if self.after_id:
+            self.root.after_cancel(self.after_id)
+            self.after_id = None

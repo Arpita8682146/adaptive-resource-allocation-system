@@ -1,17 +1,33 @@
 import psutil
+from collections import deque
+import time
 
-cpu_data = []
-mem_data = []
+# 📊 Store last 50 values
+cpu_data = deque(maxlen=50)
+mem_data = deque(maxlen=50)
+
+# 🔥 IMPORTANT: Warm-up CPU measurement (prevents 0.0 issue)
+psutil.cpu_percent(interval=None)
+time.sleep(0.1)
 
 def get_data():
-    cpu = psutil.cpu_percent()
-    mem = psutil.virtual_memory().percent
+    try:
+        # ⚡ Get CPU (NON-blocking + accurate after warm-up)
+        cpu = psutil.cpu_percent(interval=None)
 
-    cpu_data.append(cpu)
-    mem_data.append(mem)
+        # 💾 Memory
+        mem = psutil.virtual_memory().percent
 
-    if len(cpu_data) > 50:
-        cpu_data.pop(0)
-        mem_data.pop(0)
+        # 🧠 Safety fallback
+        if cpu is None or cpu == 0.0:
+            cpu = psutil.cpu_percent(interval=0.5)  # fallback for accuracy
 
-    return cpu, mem, cpu_data, mem_data
+        # 📈 Store history
+        cpu_data.append(cpu)
+        mem_data.append(mem)
+
+        return cpu, mem, list(cpu_data), list(mem_data)
+
+    except Exception as e:
+        print("Error in get_data:", e)
+        return 0.0, 0.0, list(cpu_data), list(mem_data)
