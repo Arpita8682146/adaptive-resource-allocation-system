@@ -1,98 +1,217 @@
-# 🚀 Adaptive Resource Allocation System (Operating Systems Project)
+# 🚀 Adaptive Resource Allocation System
 
-## 📌 Project Overview
-This project simulates an **Adaptive Resource Allocation System** in a multiprogramming environment.  
-It dynamically manages CPU and memory allocation among processes to improve system efficiency and avoid resource starvation.
-
-The system starts with **static allocation** and then applies **adaptive logic** based on system load and process priority.
+An intelligent system that monitors CPU and Memory usage in real-time and dynamically optimizes system performance using adaptive techniques.
 
 ---
 
-## 🎯 Objectives
-- Maximize CPU utilization
-- Prevent memory overload
-- Ensure fair resource distribution
-- Avoid starvation using priority aging
-- Compare static vs adaptive allocation
-- Simulate real-world OS behavior
+## 📌 Overview
+
+This project simulates how an operating system manages resources efficiently. It includes real-time monitoring, process control, prediction, and adaptive optimization.
 
 ---
 
-## ⚙️ Key Features
+## 🧠 Features
 
-### 🔹 1. Static Resource Allocation
-- Initial CPU and memory assigned to processes
-- Based on predefined requirements
-
-### 🔹 2. Adaptive Resource Allocation
-- Dynamically reallocates resources
-- Adjusts based on system usage and thresholds
-
-### 🔹 3. Priority Aging
-- Prevents starvation of low-priority processes
-- Gradually increases priority over time
-
-### 🔹 4. Real-Time Monitoring
-- Tracks CPU and memory usage
-- Helps in decision-making
-
-### 🔹 5. Stress Testing Module
-- Simulates high system load
-- Tests system stability under pressure
-
-### 🔹 6. Prediction Module
-- Predicts future resource usage
-- Enhances proactive allocation
-
-### 🔹 7. Execution Logging
-- Logs system behavior
-- Useful for debugging and analysis
+* 📊 Real-time CPU & Memory monitoring
+* ⚙️ Adaptive process priority allocation
+* 🤖 CPU prediction using Machine Learning (Linear Regression)
+* 🚨 Anomaly detection
+* 📋 Process Manager (Kill / Stop / Start / Boost)
+* 🔐 User authentication system
+* 📈 Interactive graphs (Plotly)
+* 💻 Desktop GUI (Tkinter)
+* 🌐 Web dashboard (Streamlit)
 
 ---
 
-## 🧠 System Architecture
-Process → Resource Manager → Adaptive Logic → Allocation Update
-↓
-Monitoring + Prediction + Stress Testing
----
+## 📁 Project Structure
 
-## 📂 Project Structure
-adaptive-resource-allocation-system/
+```
+ADAPTIVE-RESOURCE-ALLOCATION/
+│
+├── docs/
 │
 ├── src/
-│ ├── main.py # Main execution file
-│ ├── process.py # Process class
-│ ├── resource_manager.py # Resource allocation logic
-│ ├── adaptive_logic.py # Adaptive + priority aging
+│   ├── desktop_app/
+│   │   ├── main.py
+│   │   ├── dashboard.py
+│   │   ├── monitor.py
+│   │   ├── allocator.py
 │
-│ └── web_app/
-│ ├── main.py # Streamlit UI (Frontend)
-│ ├── monitor.py # System monitoring
-│ ├── predictor.py # Prediction logic
-│ ├── stress.py # Stress testing
-│ ├── utils.py # Helper functions
-│ └── users.json # User data
+│   ├── web_app/
+│   │   ├── main.py
+│   │   ├── monitor.py
+│   │   ├── predictor.py
+│   │   ├── utils.py
+│   │   ├── adaptive_logic.py
+│   │   ├── stress.py
+│   │   ├── users.json
+│   │   ├── package.json
+│   │   ├── README_NODE.md
 │
-├── system_log.txt # Execution logs
-├── README.md # Project documentation
+├── venv/
+├── requirements.txt
+├── README.md
+```
 
+---
 
-🖥️ Output
+## ⚙️ How It Works
 
-Process details (CPU, memory, priority)
-Updated system status
-Real-time dashboard visualization
-Adaptive allocation results
+### 🔹 Monitoring
 
-🔬 Technologies Used
+* Uses `psutil` to track CPU and Memory usage
+* Stores historical data for graphs and prediction
 
-Python
-Streamlit (Frontend)
-OS Concepts (Scheduling, Allocation)
-Git & GitHub (Collaboration)
-💡 Key Concepts Used
-Multiprogramming
-CPU Scheduling
-Resource Allocation
-Priority Aging
-Dynamic Optimization
+### 🔹 Adaptive Resource Allocation
+
+* If CPU usage is high → Increase priority (boost)
+* If CPU usage is low → Decrease priority
+
+### 🔹 Prediction
+
+* Uses Linear Regression to predict future CPU usage
+* Helps in proactive system optimization
+
+### 🔹 Process Manager
+
+Users can:
+
+* 💀 Kill process (terminate)
+* ⏹️ Stop process (pause/suspend)
+* ▶️ Start process (resume)
+* ⚡ Boost process priority
+
+---
+
+## 🚀 Installation
+
+### 1️⃣ Clone Repository
+
+```
+git clone <your-repo-link>
+cd ADAPTIVE-RESOURCE-ALLOCATION
+```
+
+### 2️⃣ Create Virtual Environment
+
+```
+python -m venv venv
+```
+
+Activate:
+
+**Windows**
+
+```
+venv\Scripts\activate
+```
+
+**Mac/Linux**
+
+```
+source venv/bin/activate
+```
+
+### 3️⃣ Install Dependencies
+
+```
+pip install -r requirements.txt
+```
+
+---
+
+## ▶️ Run the Project
+
+### 🌐 Run Web Dashboard
+
+```
+streamlit run src/web_app/main.py
+```
+
+### 💻 Run Desktop Application
+
+```
+python src/desktop_app/main.py
+```
+
+---
+
+## 🔐 Login Credentials
+
+Default users:
+
+```
+admin : 1234
+user1 : pass1
+user2 : pass2
+```
+
+---
+
+## 📊 Health Score
+
+```
+Health Score = 100 - (0.5 × CPU + 0.5 × Memory)
+```
+
+* Higher → Better system performance
+* Lower → System under stress
+
+---
+
+## 🧪 Stress Testing
+
+To simulate high CPU usage:
+
+```
+python src/web_app/stress.py
+```
+
+---
+
+## 🔧 Technologies Used
+
+* Python
+* Streamlit
+* Tkinter
+* psutil
+* NumPy
+* Pandas
+* Plotly
+* Scikit-learn
+* matplotlib
+
+---
+
+## ⚠️ Notes
+
+* Some processes cannot be killed due to OS restrictions
+* Admin privileges may be required
+* CPU % may show 0 initially due to measurement delay
+
+---
+
+## 🚀 Future Enhancements
+
+* Docker deployment
+* Cloud monitoring
+* AI-based anomaly detection
+* Multi-user system
+* Kubernetes integration
+
+---
+
+## 👨‍💻 Authors
+
+* Shivam Bharti
+* Arpita Singh
+* Vishal Gaurav
+
+---
+
+## 💡 Conclusion
+
+This project demonstrates how adaptive systems dynamically manage resources, similar to modern operating systems.
+
+---
