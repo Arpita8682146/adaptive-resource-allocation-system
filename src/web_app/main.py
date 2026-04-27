@@ -1,18 +1,33 @@
-import streamlit as st
-import psutil
-import pandas as pd
-import numpy as np
-import json
-import os
-from streamlit_autorefresh import st_autorefresh
+import math
+
 import plotly.graph_objects as go
+import streamlit as st
+from streamlit_autorefresh import st_autorefresh
+
+from adaptive_logic import apply_adaptive_logic
+from monitor import get_data
+from predictor import detect_anomaly, predict_future
+from utils import (
+    boost_process,
+    build_process_dataframe,
+    compute_health,
+    ensure_session_state,
+    is_pid_active,
+    kill_process,
+    load_users,
+    resume_process,
+    start_stress_test,
+    stop_stress_test,
+    suspend_process,
+)
 
 # -----------------------------
 # CONFIG & STYLES
 # -----------------------------
 st.set_page_config(page_title="🚀 Resource Dashboard Pro", layout="wide")
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
@@ -107,120 +122,186 @@ section[data-testid="stSidebar"] .stMarkdown { color: #e2e8f0; }
 
 .stDataFrame { border-radius: 16px; overflow: hidden; }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
+
+
+def render_metric(col, icon, label, value, color):
+    glow = f"radial-gradient(circle at top right, {color}15, transparent 70%)"
+    col.markdown(
+        f"""
+        <div class="metric-card" style="background: {glow}, rgba(255,255,255,0.03);">
+            <div class="metric-label">{label}</div>
+            <div class="metric-value" style="color: {color};">{value}</div>
+            <div class="metric-icon">{icon}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def notify(result):
+    success, message = result
+    if success:
+        st.success(f"✅ {message}")
+    else:
+        st.error(f"❌ {message}")
+
+
+@st.cache_data(ttl=2, show_spinner=False)
+def get_process_snapshot():
+    return build_process_dataframe()
+
+
+def run_process_action(action, pid):
+    pid = int(pid or 0)
+    if pid <= 0:
+        st.warning("⚠️ Enter a valid PID")
+        return
+
+    if action == "stop":
+        result = suspend_process(pid)
+        if result[0]:
+            st.session_state["stopped_pids"].add(pid)
+    elif action == "start":
+        result = resume_process(pid)
+        if result[0]:
+            st.session_state["stopped_pids"].discard(pid)
+    elif action == "boost":
+        result = boost_process(pid)
+        if result[0]:
+            st.session_state["boosted_pids"].add(pid)
+    elif action == "kill":
+        result = kill_process(pid)
+        if result[0]:
+            st.session_state["killed_pids"].add(pid)
+            st.session_state["stopped_pids"].discard(pid)
+            st.session_state["boosted_pids"].discard(pid)
+    else:
+        result = (False, "Unsupported action")
+
+    if result[0]:
+        get_process_snapshot.clear()
+    notify(result)
+
+
+ensure_session_state(st.session_state)
+
+if st.session_state["stress_pid"] and not is_pid_active(st.session_state["stress_pid"]):
+    st.session_state["stress_pid"] = None
 
 # -----------------------------
 # AUTHENTICATION
 # -----------------------------
-def load_users():
-    creds = {"admin": "1234", "user1": "pass1", "user2": "pass2"}
-    try:
-        curr_path = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(curr_path, "users.json")
-        if os.path.exists(file_path):
-            with open(file_path, 'r') as f:
-                data = json.load(f)
-                for k, v in data.items():
-                    creds[str(k).strip()] = str(v).strip()
-    except:
-        pass
-    return creds
-
-if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
-if "cpu_history" not in st.session_state:
-    st.session_state["cpu_history"] = []
-if "mem_history" not in st.session_state:
-    st.session_state["mem_history"] = []
-if "boosted_pids" not in st.session_state:
-    st.session_state["boosted_pids"] = set()
-if "stopped_pids" not in st.session_state:
-    st.session_state["stopped_pids"] = set()
-if "killed_pids" not in st.session_state:
-    st.session_state["killed_pids"] = set()
-
 if not st.session_state["logged_in"]:
-    st.markdown("", unsafe_allow_html=True)
-    _, col_c, _ = st.columns([1.2, 1, 1.2])
-    with col_c:
-        st.markdown("""
-        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 20px; padding: 40px; backdrop-filter: blur(24px); text-align: center;">
-            <div class="login-icon">⚡</div>
-            <h2 style="color: #f1f5f9; margin: 10px 0 4px;">System Login</h2>
-            <p style="color: #64748b; font-size: 0.85rem;">Resource Dashboard Pro</p>
-        </div>
-        """, unsafe_allow_html=True)
+    _, center_col, _ = st.columns([1.2, 1, 1.2])
+    with center_col:
+        st.markdown(
+            """
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+                border-radius: 20px; padding: 40px; backdrop-filter: blur(24px); text-align: center;">
+                <div class="login-icon">⚡</div>
+                <h2 style="color: #f1f5f9; margin: 10px 0 4px;">System Login</h2>
+                <p style="color: #64748b; font-size: 0.85rem;">Resource Dashboard Pro</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
         with st.form("login"):
-            u = st.text_input("👤 Username").strip()
-            p = st.text_input("🔒 Password", type="password").strip()
+            username = st.text_input("👤 Username").strip()
+            password = st.text_input("🔒 Password", type="password").strip()
             submitted = st.form_submit_button("🚀 Sign In", use_container_width=True)
             if submitted:
-                db = load_users()
-                if u in db and str(db[u]) == str(p):
+                users = load_users()
+                if username in users and str(users[username]) == str(password):
                     st.session_state["logged_in"] = True
-                    st.session_state["user"] = u
+                    st.session_state["user"] = username
                     st.rerun()
                 else:
                     st.error("❌ Invalid Credentials")
-        st.markdown("<p style='text-align:center;color:#64748b;font-size:0.8rem;'>Default: admin / 1234</p>", unsafe_allow_html=True)
+        st.markdown(
+            "<p style='text-align:center;color:#64748b;font-size:0.8rem;'>Default: admin / 1234</p>",
+            unsafe_allow_html=True,
+        )
     st.stop()
-
-# -----------------------------
-# DATA COLLECTION
-# -----------------------------
-st_autorefresh(interval=3000, key="ref")
-cpu = psutil.cpu_percent(interval=0.1)
-mem = psutil.virtual_memory().percent
-
-st.session_state["cpu_history"].append(cpu)
-st.session_state["mem_history"].append(mem)
-st.session_state["cpu_history"] = st.session_state["cpu_history"][-60:]
-st.session_state["mem_history"] = st.session_state["mem_history"][-60:]
-
-# -----------------------------
-# PREDICTION & ANOMALY DETECTION
-# -----------------------------
-def predict_cpu(data):
-    if len(data) < 5:
-        return None, None
-    trend = (data[-1] - data[0]) / len(data)
-    future = [round(max(0, min(100, data[-1] + trend * i)), 2) for i in range(1, 11)]
-    return list(range(len(data), len(data) + 10)), future
-
-is_anomaly = False
-avg_cpu = 0
-if len(st.session_state["cpu_history"]) > 10:
-    avg_cpu = np.mean(st.session_state["cpu_history"])
-    std_cpu = np.std(st.session_state["cpu_history"])
-    is_anomaly = cpu > (avg_cpu + 2 * std_cpu)
 
 # -----------------------------
 # SIDEBAR
 # -----------------------------
 with st.sidebar:
-    st.markdown("""
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-        <span style="font-size: 1.8rem;">⚡</span>
-        <div>
-            <div style="font-size: 1.1rem; font-weight: 800; color: #f1f5f9;">Dashboard Pro</div>
-            <div style="font-size: 0.75rem; color: #64748b;">System Monitor v2.0</div>
+    st.markdown(
+        """
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <span style="font-size: 1.8rem;">⚡</span>
+            <div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: #f1f5f9;">Dashboard Pro</div>
+                <div style="font-size: 0.75rem; color: #64748b;">System Monitor v2.0</div>
+            </div>
         </div>
-    </div>
-    <hr style="border-color: rgba(255,255,255,0.06); margin: 16px 0;">
-    """, unsafe_allow_html=True)
+        <hr style="border-color: rgba(255,255,255,0.06); margin: 16px 0;">
+        """,
+        unsafe_allow_html=True,
+    )
     st.markdown("#### ⚙️ Settings")
     threshold = st.slider("CPU Alert Threshold", 50, 100, 80)
     auto_optimize = st.toggle("🔄 Auto Optimization", value=True)
     st.markdown("<hr style='border-color: rgba(255,255,255,0.06);'>", unsafe_allow_html=True)
     if st.button("🚪 Logout", use_container_width=True):
         st.session_state["logged_in"] = False
+        st.session_state["user"] = ""
         st.rerun()
+
+# -----------------------------
+# DATA COLLECTION
+# -----------------------------
+st_autorefresh(interval=3000, key="ref")
+cpu, mem, cpu_history, mem_history = get_data(
+    st.session_state["cpu_history"], st.session_state["mem_history"], history_size=60
+)
+st.session_state["cpu_history"] = cpu_history
+st.session_state["mem_history"] = mem_history
+
+raw_process_df = get_process_snapshot()
+if not raw_process_df.empty and st.session_state["killed_pids"]:
+    raw_process_df = raw_process_df[~raw_process_df["pid"].isin(st.session_state["killed_pids"])].reset_index(drop=True)
+
+process_records = raw_process_df.to_dict("records") if not raw_process_df.empty else []
+_, future_y = predict_future(cpu_history)
+is_anomaly, _, _ = detect_anomaly(cpu_history)
+health = compute_health(cpu, mem)
+num_tasks = len(process_records)
+
+adaptive_state = apply_adaptive_logic(
+    cpu_usage=cpu,
+    memory_usage=mem,
+    processes=process_records,
+    auto_optimize=auto_optimize,
+    cpu_threshold=threshold,
+    memory_threshold=85,
+    anomaly_detected=is_anomaly,
+)
+
+auto_actions = adaptive_state["actions"]
+priority_map = {process["pid"]: process["adaptive_priority"] for process in adaptive_state["aged_processes"]}
+
+df_procs = raw_process_df.copy()
+if df_procs.empty:
+    df_procs["adaptive_priority"] = []
+else:
+    df_procs["adaptive_priority"] = df_procs["pid"].map(priority_map).fillna(0.0)
+    df_procs["name"] = df_procs["name"].astype(str)
+    boosted_mask = df_procs["pid"].isin(st.session_state["boosted_pids"])
+    stopped_mask = df_procs["pid"].isin(st.session_state["stopped_pids"])
+    df_procs.loc[boosted_mask, "name"] = df_procs.loc[boosted_mask, "name"] + " ⚡"
+    df_procs.loc[stopped_mask, "status"] = "stopped"
+    df_procs.loc[stopped_mask, "cpu_percent"] = 0.0
 
 # -----------------------------
 # HEADER
 # -----------------------------
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
     <div style="display: flex; align-items: center; gap: 12px;">
         <span class="header-title">🚀 Resource Dashboard</span>
@@ -228,26 +309,15 @@ st.markdown(f"""
     </div>
     <span style="color: #64748b; font-size: 0.85rem;">📡 User: {st.session_state['user']}</span>
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # -----------------------------
 # METRIC CARDS
 # -----------------------------
-health = round(100 - (cpu * 0.5 + mem * 0.5), 2)
-num_tasks = len(psutil.pids())
-
 colors = {"cpu": "#2dd4bf", "mem": "#a78bfa", "health": "#22c55e", "tasks": "#38bdf8"}
 m1, m2, m3, m4 = st.columns(4)
-
-def render_metric(col, icon, label, value, color):
-    glow = f"radial-gradient(circle at top right, {color}15, transparent 70%)"
-    col.markdown(f"""
-    <div class="metric-card" style="background: {glow}, rgba(255,255,255,0.03);">
-        <div class="metric-label">{label}</div>
-        <div class="metric-value" style="color: {color};">{value}</div>
-        <div class="metric-icon">{icon}</div>
-    </div>
-    """, unsafe_allow_html=True)
 
 render_metric(m1, "⚡", "CPU Usage", f"{cpu}%", colors["cpu"])
 render_metric(m2, "🧠", "Memory", f"{mem}%", colors["mem"])
@@ -257,26 +327,49 @@ render_metric(m4, "📋", "Tasks", str(num_tasks), colors["tasks"])
 st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
 
 # -----------------------------
-# ALERTS (with danger/warning colors)
+# ALERTS
 # -----------------------------
 a1, a2, a3 = st.columns(3)
 with a1:
     if cpu > threshold:
-        cls, msg = "alert-danger", "⚠️ High CPU Load Detected"
+        status_class, status_message = "alert-danger", "⚠️ High CPU Load Detected"
     elif cpu > threshold * 0.75:
-        cls, msg = "alert-warning", "🔶 Moderate CPU Load"
+        status_class, status_message = "alert-warning", "🔶 Moderate CPU Load"
     else:
-        cls, msg = "alert-success", "✅ System Stable"
-    st.markdown(f'<div class="alert-bar {cls}"><strong>Status:</strong> {msg}</div>', unsafe_allow_html=True)
+        status_class, status_message = "alert-success", "✅ System Stable"
+    st.markdown(
+        f'<div class="alert-bar {status_class}"><strong>Status:</strong> {status_message}</div>',
+        unsafe_allow_html=True,
+    )
 with a2:
-    cls, msg = ("alert-danger", "🚨 Anomaly Detected") if is_anomaly else ("alert-info", "🔍 Normal Pattern")
-    st.markdown(f'<div class="alert-bar {cls}"><strong>Smart Engine:</strong> {msg}</div>', unsafe_allow_html=True)
+    engine_class, engine_message = ("alert-danger", "🚨 Anomaly Detected") if is_anomaly else ("alert-info", "🔍 Normal Pattern")
+    st.markdown(
+        f'<div class="alert-bar {engine_class}"><strong>Smart Engine:</strong> {engine_message}</div>',
+        unsafe_allow_html=True,
+    )
 with a3:
-    f_x, f_y = predict_cpu(st.session_state["cpu_history"])
-    pred_msg = f"📊 Next: {f_y[0]}%" if f_y else "⏳ Analyzing..."
-    st.markdown(f'<div class="alert-bar alert-info"><strong>Prediction:</strong> {pred_msg}</div>', unsafe_allow_html=True)
+    prediction_message = f"📊 Next: {future_y[0]}%" if future_y else "⏳ Analyzing..."
+    st.markdown(
+        f'<div class="alert-bar alert-info"><strong>Prediction:</strong> {prediction_message}</div>',
+        unsafe_allow_html=True,
+    )
 
 st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+
+if auto_actions:
+    updated_actions = [action for action in auto_actions if action["status"] == "updated"]
+    blocked_actions = [action for action in auto_actions if action["status"] == "blocked"]
+    if updated_actions:
+        pid_summary = ", ".join(str(action["pid"]) for action in updated_actions)
+        st.markdown(
+            f'<div class="alert-bar alert-info"><strong>Adaptive Actions:</strong> Reprioritized PIDs {pid_summary}</div>',
+            unsafe_allow_html=True,
+        )
+    elif blocked_actions:
+        st.markdown(
+            '<div class="alert-bar alert-warning"><strong>Adaptive Actions:</strong> Auto optimization was limited by system permissions</div>',
+            unsafe_allow_html=True,
+        )
 
 # -----------------------------
 # CHARTS & HEALTH GAUGE
@@ -287,52 +380,68 @@ with chart_col:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">📈 Real-Time Performance</div>', unsafe_allow_html=True)
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        y=st.session_state["cpu_history"], name="CPU %",
-        line=dict(color='#2dd4bf', width=2.5, shape='spline'),
-        fill='tozeroy', fillcolor='rgba(45,212,191,0.08)',
-    ))
-    fig.add_trace(go.Scatter(
-        y=st.session_state["mem_history"], name="MEM %",
-        line=dict(color='#a78bfa', width=2.5, shape='spline'),
-        fill='tozeroy', fillcolor='rgba(167,139,250,0.08)',
-    ))
+    fig.add_trace(
+        go.Scatter(
+            y=cpu_history,
+            name="CPU %",
+            line=dict(color="#2dd4bf", width=2.5, shape="spline"),
+            fill="tozeroy",
+            fillcolor="rgba(45,212,191,0.08)",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            y=mem_history,
+            name="MEM %",
+            line=dict(color="#a78bfa", width=2.5, shape="spline"),
+            fill="tozeroy",
+            fillcolor="rgba(167,139,250,0.08)",
+        )
+    )
     fig.update_layout(
         height=300,
-        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
         font=dict(color="#64748b", size=11),
         margin=dict(l=0, r=0, t=10, b=0),
-        legend=dict(orientation="h", yanchor="top", y=1.12, xanchor="center", x=0.5,
-                    font=dict(size=12, color="#94a3b8")),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=1.12,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=12, color="#94a3b8"),
+        ),
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.03)', zeroline=False,
-                   range=[0, 100], showticklabels=True),
+        yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.03)", zeroline=False, range=[0, 100]),
         hovermode="x unified",
     )
     st.plotly_chart(fig, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 with gauge_col:
     st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">💚 System Health</div>', unsafe_allow_html=True)
     angle = (health / 100) * 180
     health_color = "#22c55e" if health >= 70 else "#f59e0b" if health >= 40 else "#ef4444"
-    import math
-    rad = math.radians(180 - angle)
-    x = 60 + 45 * math.cos(rad)
-    y = 60 - 45 * math.sin(rad)
+    radius = math.radians(180 - angle)
+    x_pos = 60 + 45 * math.cos(radius)
+    y_pos = 60 - 45 * math.sin(radius)
     large_arc = 1 if angle > 180 else 0
-    st.markdown(f"""
-    <div style="text-align: center;">
-        <svg viewBox="0 0 120 70" style="width: 180px; margin: 0 auto;">
-            <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" stroke-linecap="round"/>
-            <path d="M 15 60 A 45 45 0 {large_arc} 1 {x:.1f} {y:.1f}" fill="none" stroke="{health_color}" stroke-width="8" stroke-linecap="round" style="filter: drop-shadow(0 0 6px {health_color}80);"/>
-        </svg>
-        <div style="font-size: 2.5rem; font-weight: 800; color: {health_color}; margin-top: 8px;">{health}%</div>
-        <div style="color: #64748b; font-size: 0.85rem;">Overall Score</div>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div style="text-align: center;">
+            <svg viewBox="0 0 120 70" style="width: 180px; margin: 0 auto;">
+                <path d="M 15 60 A 45 45 0 0 1 105 60" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" stroke-linecap="round"/>
+                <path d="M 15 60 A 45 45 0 {large_arc} 1 {x_pos:.1f} {y_pos:.1f}" fill="none" stroke="{health_color}" stroke-width="8" stroke-linecap="round" style="filter: drop-shadow(0 0 6px {health_color}80);"/>
+            </svg>
+            <div style="font-size: 2.5rem; font-weight: 800; color: {health_color}; margin-top: 8px;">{health}%</div>
+            <div style="color: #64748b; font-size: 0.85rem;">Overall Score</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------
 # RECOMMENDATIONS
@@ -341,41 +450,80 @@ st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 st.markdown('<div class="section-title">💡 Recommendations</div>', unsafe_allow_html=True)
 
-recs = []
-if cpu > 80:
-    recs.append(("🔴", "Critical CPU Load", "CPU usage is dangerously high. Consider terminating heavy processes or scaling resources.", "danger"))
-elif cpu > 60:
-    recs.append(("🟠", "Elevated CPU Usage", "CPU is moderately high. Monitor closely and prepare to optimize.", "warning"))
-else:
-    recs.append(("🟢", "CPU Healthy", "CPU usage is within normal range. No action needed.", "success"))
-
-if mem > 85:
-    recs.append(("🔴", "Critical Memory Pressure", "Memory is nearly full. Close unused applications or increase RAM.", "danger"))
-elif mem > 65:
-    recs.append(("🟠", "Moderate Memory Usage", "Memory usage is climbing. Keep an eye on memory-hungry processes.", "warning"))
-else:
-    recs.append(("🟢", "Memory Healthy", "Memory usage is normal.", "success"))
-
-if is_anomaly:
-    recs.append(("🔴", "Anomaly Detected", "Unusual CPU spike detected. Investigate recent process activity.", "danger"))
-
+recommendations = list(adaptive_state["recommendations"])
 if health < 40:
-    recs.append(("🔴", "System Health Critical", "Overall health is poor. Immediate intervention recommended.", "danger"))
+    recommendations.append(
+        {"icon": "🔴", "title": "System Health Critical", "description": "Overall health is poor. Immediate intervention recommended.", "severity": "danger"}
+    )
 elif health < 70:
-    recs.append(("🟠", "Health Needs Attention", "System health is below optimal. Review resource allocation.", "warning"))
+    recommendations.append(
+        {"icon": "🟠", "title": "Health Needs Attention", "description": "System health is below optimal. Review resource allocation.", "severity": "warning"}
+    )
 
-if all(r[3] == "success" for r in recs):
-    recs.append(("💡", "All Systems Optimal", "Everything is running smoothly. Great job!", "info"))
+risk_levels = {rec["severity"] for rec in recommendations}
+if not risk_levels.intersection({"danger", "warning"}):
+    recommendations.append(
+        {"icon": "💡", "title": "System Responsive", "description": "Adaptive controls and telemetry are running normally.", "severity": "info"}
+    )
 
-for icon, title, desc, severity in recs:
-    st.markdown(f"""
-    <div class="rec-card rec-{severity}">
-        <div class="rec-title">{icon} {title}</div>
-        <div class="rec-desc">{desc}</div>
-    </div>
-    """, unsafe_allow_html=True)
+for rec in recommendations:
+    st.markdown(
+        f"""
+        <div class="rec-card rec-{rec['severity']}">
+            <div class="rec-title">{rec['icon']} {rec['title']}</div>
+            <div class="rec-desc">{rec['description']}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------
+# STRESS TEST
+# -----------------------------
+st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+st.markdown('<div class="section-title">🔥 Stress Test Control</div>', unsafe_allow_html=True)
+
+stress_running = is_pid_active(st.session_state["stress_pid"])
+stress_cols = st.columns([1, 1, 2])
+
+with stress_cols[0]:
+    if st.button("🔥 Start Stress", use_container_width=True):
+        if stress_running:
+            st.warning(f"⚠️ Stress test already running on PID {st.session_state['stress_pid']}")
+        else:
+            try:
+                st.session_state["stress_pid"] = start_stress_test()
+                get_process_snapshot.clear()
+                st.success(f"✅ Stress test started on PID {st.session_state['stress_pid']}")
+            except Exception as exc:
+                st.error(f"❌ Unable to start stress test: {exc}")
+
+with stress_cols[1]:
+    if st.button("🧹 Stop Stress", use_container_width=True):
+        if not stress_running:
+            st.warning("⚠️ No active stress test is running")
+        else:
+            result = stop_stress_test(st.session_state["stress_pid"])
+            if result[0]:
+                st.session_state["stress_pid"] = None
+                get_process_snapshot.clear()
+            notify(result)
+
+stress_running = is_pid_active(st.session_state["stress_pid"])
+with stress_cols[2]:
+    status_class = "alert-danger" if stress_running else "alert-success"
+    status_message = (
+        f"Stress script active on PID {st.session_state['stress_pid']}" if stress_running else "Stress script is idle"
+    )
+    st.markdown(
+        f'<div class="alert-bar {status_class}"><strong>Status:</strong> {status_message}</div>',
+        unsafe_allow_html=True,
+    )
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------
 # PROCESS MANAGER
@@ -384,92 +532,25 @@ st.markdown("<div style='margin: 12px 0;'></div>", unsafe_allow_html=True)
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 st.markdown('<div class="section-title">📋 Process Manager</div>', unsafe_allow_html=True)
 
-# Top controls - PID input with all 4 actions
 top_cols = st.columns([2, 1, 1, 1, 1])
 with top_cols[0]:
     pid_input = st.number_input("Enter PID", min_value=0, step=1, key="pid_top", label_visibility="collapsed")
 with top_cols[1]:
     if st.button("⏹️ Stop", use_container_width=True, key="stop_top"):
-        if pid_input > 0:
-            try:
-                proc = psutil.Process(int(pid_input))
-                if int(pid_input) not in st.session_state["stopped_pids"]:
-                    proc.suspend()
-                    st.session_state["stopped_pids"].add(int(pid_input))
-                    st.success(f"✅ Stopped PID {pid_input}")
-                else:
-                    st.warning(f"⚠️ PID {pid_input} already stopped")
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
+        run_process_action("stop", pid_input)
 with top_cols[2]:
     if st.button("▶️ Start", use_container_width=True, key="start_top"):
-        if pid_input > 0:
-            try:
-                proc = psutil.Process(int(pid_input))
-                if int(pid_input) in st.session_state["stopped_pids"]:
-                    proc.resume()
-                    st.session_state["stopped_pids"].discard(int(pid_input))
-                    st.success(f"✅ Started PID {pid_input}")
-                else:
-                    st.warning(f"⚠️ PID {pid_input} already running")
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
+        run_process_action("start", pid_input)
 with top_cols[3]:
     if st.button("⚡ Boost", use_container_width=True, key="boost_top"):
-        if pid_input > 0:
-            try:
-                p = psutil.Process(int(pid_input))
-                if os.name == 'nt':
-                    p.nice(psutil.HIGH_PRIORITY_CLASS)
-                else:
-                    p.nice(-10)
-                st.session_state["boosted_pids"].add(int(pid_input))
-                st.success(f"✅ Boosted PID {pid_input}")
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
+        run_process_action("boost", pid_input)
 with top_cols[4]:
     if st.button("💀 Kill", use_container_width=True, type="primary", key="kill_top"):
-        if pid_input > 0:
-            try:
-                psutil.Process(int(pid_input)).terminate()
-                st.session_state["killed_pids"].add(int(pid_input))
-                st.success(f"✅ Killed PID {pid_input}")
-            except Exception as e:
-                st.error(f"❌ Error: {e}")
+        run_process_action("kill", pid_input)
 
-# Process filter
 search = st.text_input("🔍 Filter processes...", placeholder="Type process name...", key="proc_search")
-
-@st.cache_data(ttl=2)
-def get_procs():
-    p_list = []
-    for p in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_percent', 'status']):
-        try:
-            info = p.info
-            info['cpu_percent'] = info['cpu_percent'] or 0.0
-            info['memory_percent'] = round(info['memory_percent'] or 0.0, 2)
-            info['status'] = info.get('status', 'unknown')
-            p_list.append(info)
-        except:
-            continue
-    return pd.DataFrame(p_list).sort_values('cpu_percent', ascending=False)
-
-df_procs = get_procs()
-
-# Filter out killed PIDs
-if st.session_state["killed_pids"]:
-    df_procs = df_procs[~df_procs['pid'].isin(st.session_state["killed_pids"])]
-
-# Mark stopped/boosted
-if not df_procs.empty:
-    df_procs['boosted'] = df_procs['pid'].apply(lambda x: "⚡" if x in st.session_state["boosted_pids"] else "")
-    df_procs['name'] = df_procs['name'] + df_procs['boosted']
-    df_procs.loc[df_procs['pid'].isin(st.session_state["stopped_pids"]), 'status'] = 'stopped'
-    df_procs.loc[df_procs['pid'].isin(st.session_state["stopped_pids"]), 'cpu_percent'] = 0.0
-    df_procs = df_procs.drop(columns=['boosted'])
-
 if search:
-    df_procs = df_procs[df_procs['name'].str.contains(search, case=False, na=False)]
+    df_procs = df_procs[df_procs["name"].str.contains(search, case=False, na=False)]
 
 st.dataframe(
     df_procs.head(15),
@@ -480,55 +561,29 @@ st.dataframe(
         "name": st.column_config.TextColumn("Process Name", width="medium"),
         "cpu_percent": st.column_config.ProgressColumn("CPU %", min_value=0, max_value=100, format="%.1f%%"),
         "memory_percent": st.column_config.ProgressColumn("Memory %", min_value=0, max_value=100, format="%.2f%%"),
+        "adaptive_priority": st.column_config.NumberColumn("Adaptive Score", format="%.1f"),
         "status": st.column_config.TextColumn("Status", width="small"),
-    }
+    },
 )
 
-# Bottom controls
 ctrl1, ctrl2 = st.columns(2)
 with ctrl1:
     pid_kill = st.number_input("PID to Kill", min_value=0, step=1, key="k")
     if st.button("💀 Kill Process", type="primary", use_container_width=True):
-        try:
-            psutil.Process(int(pid_kill)).terminate()
-            st.session_state["killed_pids"].add(int(pid_kill))
-            st.success(f"✅ Killed PID {pid_kill}")
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+        run_process_action("kill", pid_kill)
 with ctrl2:
     pid_boost = st.number_input("PID to Boost", min_value=0, step=1, key="b")
     if st.button("⚡ Boost Priority", use_container_width=True):
-        try:
-            p = psutil.Process(int(pid_boost))
-            if os.name == 'nt':
-                p.nice(psutil.HIGH_PRIORITY_CLASS)
-            else:
-                p.nice(-10)
-            st.session_state["boosted_pids"].add(int(pid_boost))
-            st.success(f"✅ Boosted PID {pid_boost}")
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+        run_process_action("boost", pid_boost)
 
 ctrl3, ctrl4 = st.columns(2)
 with ctrl3:
     pid_stop = st.number_input("PID to Stop", min_value=0, step=1, key="s")
     if st.button("⏹️ Stop Process", use_container_width=True):
-        try:
-            proc = psutil.Process(int(pid_stop))
-            proc.suspend()
-            st.session_state["stopped_pids"].add(int(pid_stop))
-            st.success(f"✅ Stopped PID {pid_stop}")
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+        run_process_action("stop", pid_stop)
 with ctrl4:
     pid_start = st.number_input("PID to Start", min_value=0, step=1, key="st_pid")
     if st.button("▶️ Start Process", use_container_width=True):
-        try:
-            proc = psutil.Process(int(pid_start))
-            proc.resume()
-            st.session_state["stopped_pids"].discard(int(pid_start))
-            st.success(f"✅ Started PID {pid_start}")
-        except Exception as e:
-            st.error(f"❌ Error: {e}")
+        run_process_action("start", pid_start)
 
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
