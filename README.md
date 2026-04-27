@@ -13,7 +13,7 @@ This project is a self-contained browser app with:
 Because the app uses JavaScript modules, it should be served through a small local web server instead of opening the files directly.
 
 ```bash
-cd "/Users/shivambharti/Documents/New project"
+cd src/Simulator
 python3 -m http.server 4173
 ```
 
@@ -168,12 +168,6 @@ pip install -r requirements.txt
 
 ```
 streamlit run src/web_app/main.py
-```
-
-### 💻 Run Desktop Application
-
-```
-python src/desktop_app/main.py
 ```
 
 ---
