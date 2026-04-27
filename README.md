@@ -73,11 +73,11 @@ ADAPTIVE-RESOURCE-ALLOCATION/
 ├── docs/
 │
 ├── src/
-│   ├── Simulator/
-│   │   ├── assets
-│   │       ├── dashboard.py
-│   │       ├── monitor.py
-│   │       ├── allocator.py
+│   ├── desktop_app/
+│   │   ├── main.py
+│   │   ├── dashboard.py
+│   │   ├── monitor.py
+│   │   ├── allocator.py
 │
 │   ├── web_app/
 │   │   ├── main.py
