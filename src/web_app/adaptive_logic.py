@@ -149,13 +149,14 @@ def apply_adaptive_logic(
     if auto_optimize and cpu_usage > cpu_threshold and top_cpu_processes:
         candidate_pool = [
             process
-            for process in top_cpu_processes[:3]
+            for process in top_cpu_processes[:5]
             if str(process.get("status") or "").lower() not in {"stopped", "zombie"}
         ]
         actions = adjust_resources(candidate_pool)
 
         successful_actions = [action for action in actions if action["status"] == "updated"]
         blocked_actions = [action for action in actions if action["status"] == "blocked"]
+        skipped_actions = [action for action in actions if action["status"] == "skipped"]
 
         if successful_actions:
             pid_list = ", ".join(str(action["pid"]) for action in successful_actions)
@@ -167,6 +168,8 @@ def apply_adaptive_logic(
                     "info",
                 )
             )
+        
+
         elif blocked_actions:
             recommendations.append(
                 _recommendation(
@@ -176,6 +179,36 @@ def apply_adaptive_logic(
                     "warning",
                 )
             )
+
+        elif skipped_actions:
+            recommendations.append(
+                _recommendation(
+                    "🔵",
+                    "Optimization Skipped",
+                    "Processes already running at optimal priority.",
+                    "info",
+                )
+            )
+
+        # if successful_actions:
+        #     pid_list = ", ".join(str(action["pid"]) for action in successful_actions)
+        #     recommendations.append(
+        #         _recommendation(
+        #             "🤖",
+        #             "Auto Optimization Applied",
+        #             f"Adaptive tuning reduced priority for heavy CPU processes: {pid_list}.",
+        #             "info",
+        #         )
+        #     )
+        # elif blocked_actions:
+        #     recommendations.append(
+        #         _recommendation(
+        #             "🟡",
+        #             "Auto Optimization Limited",
+        #             "Automatic tuning was blocked by system permissions for one or more processes.",
+        #             "warning",
+        #         )
+        #     )
 
     return {
         "recommendations": recommendations,

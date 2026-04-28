@@ -244,7 +244,7 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
     st.markdown("#### ⚙️ Settings")
-    threshold = st.slider("CPU Alert Threshold", 50, 100, 80)
+    threshold = st.slider("CPU Alert Threshold", 20, 100, 80)
     auto_optimize = st.toggle("🔄 Auto Optimization", value=True)
     st.markdown("<hr style='border-color: rgba(255,255,255,0.06);'>", unsafe_allow_html=True)
     if st.button("🚪 Logout", use_container_width=True):

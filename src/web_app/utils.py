@@ -141,7 +141,7 @@ def boost_process(pid):
         return False, f"Unable to boost PID {pid}: {exc}"
 
 
-def adjust_resources(processes, cpu_threshold=20.0, unix_nice_level=10):
+def adjust_resources(processes, cpu_threshold=5.0, unix_nice_level=10):
     adjustments = []
 
     for process in processes:
